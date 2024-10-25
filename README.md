@@ -10,7 +10,7 @@
 4. Makes trading decisions when:
   - No open trades exist
   - Model predicts with high confidence (>75%)
-  - Three of the same signals buy or sell signals appear in the queue
+  - Three of the same signals (buy or sell) appear in the queue
 
 ### Trade Parameters
 - Size: 10 units
