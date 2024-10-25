@@ -1,5 +1,13 @@
 # alchemy
 
+###Instructions
+1. Open Oanda account and get api keys (Spread is built in, no fees, $10 is enough to run tests)
+2. Add api keys to places
+3. Run the get_data.py script to get training data
+4. Train the model with the collected data
+5. Run the trade script
+
+
 ### OANDA Forex Data Collector
 
 #### How It Works
