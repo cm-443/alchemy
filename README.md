@@ -17,7 +17,32 @@
 - Take Profit: 15 pips
 - Trailing Stop Loss: 5 pips
 
-## Technical Details
+### Technical Details
 - Runs two async tasks: price streaming and data processing
 - Checks for trading signals every 5 seconds (to match the 5 sec data it was trained on)
 - Requires a pre-trained Random Forest model (`randomforest_best_model_with_scaler.joblib`)
+
+
+## Forest Machine Learning Model 
+
+### How It Works
+
+The script:
+1. Loads historical forex data from CSV files
+2. Calculates technical indicators (EMAs, RSI, MACD, Bollinger Bands, etc.)
+3. Labels price movements as Up/Down/Neutral using dynamic thresholds based on volatility
+4. Uses 5-fold time series cross-validation to train and evaluate the model
+5. Implements class balancing using TomekLinks and SMOTETomek
+6. Saves the best performing model for later use in trading
+
+### Performance Metrics
+- Average Training Score: 0.8990 ± 0.0135
+- Average Validation Score: 0.7420 ± 0.0102 
+- Best model achieves ~74% accuracy with balanced precision/recall
+
+### Technical Details
+- Uses Bayesian optimization for hyperparameter tuning
+- Generates confusion matrices and feature importance plots
+- Handles class imbalance using hybrid sampling approach
+- Saves trained model as `randomforest_best_model_with_scaler.joblib`
+
