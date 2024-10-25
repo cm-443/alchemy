@@ -1,8 +1,8 @@
 # alchemy
 
-# EUR/USD Trading Bot
+## Trading Script
 
-## How It Works
+### How It Works
 
 1. Streams EUR/USD price data from OANDA's API
 2. Maintains a buffer of price data and calculates technical indicators (EMAs, RSI, MACD, Bollinger Bands)
