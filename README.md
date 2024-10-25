@@ -1,18 +1,23 @@
 # alchemy
 
-Trading Script: Streams EUR/USD price data from OANDA's API Maintains a buffer of price data and calculates technical indicators (EMAs, RSI, MACD, Bollinger Bands, etc.)
-Uses a pre-trained Random Forest model to predict price movements based on these indicators
-Makes trading decisions when:
+# EUR/USD Trading Bot
 
-There are no open trades
-The model predicts with high confidence (>75%)
-For "Up" predictions: Places a buy order
-For "Down" predictions: Places a sell order
+## How It Works
 
-Each trade is placed with:
+1. Streams EUR/USD price data from OANDA's API
+2. Maintains a buffer of price data and calculates technical indicators (EMAs, RSI, MACD, Bollinger Bands)
+3. Uses a pre-trained Random Forest model to predict price movements
+4. Makes trading decisions when:
+  - No open trades exist
+  - Model predicts with high confidence (>75%)
+  - Three of the same signals buy or sell signals appear in the queue
 
-10 units size
-15 pip take profit
-5 pip trailing stop loss
+### Trade Parameters
+- Size: 10 units
+- Take Profit: 15 pips
+- Trailing Stop Loss: 5 pips
 
-The script runs two main async tasks: one for streaming prices and another for processing the data/making trading decisions, checking for signals every 5 seconds.
+## Technical Details
+- Runs two async tasks: price streaming and data processing
+- Checks for trading signals every 5 seconds (to match the 5 sec data it was trained on)
+- Requires a pre-trained Random Forest model (`randomforest_best_model_with_scaler.joblib`)
