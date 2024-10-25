@@ -1,8 +1,6 @@
 # alchemy
 
-Trading Script
-Streams EUR/USD price data from OANDA's API
-Maintains a buffer of price data and calculates technical indicators (EMAs, RSI, MACD, Bollinger Bands, etc.)
+Trading Script: Streams EUR/USD price data from OANDA's API Maintains a buffer of price data and calculates technical indicators (EMAs, RSI, MACD, Bollinger Bands, etc.)
 Uses a pre-trained Random Forest model to predict price movements based on these indicators
 Makes trading decisions when:
 
