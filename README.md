@@ -13,7 +13,7 @@
   - Three of the same signals (buy or sell) appear in the queue
 
 ### Trade Parameters
-- Size: 10 units
+- Size: 10 units (fractions of a penny)
 - Take Profit: 15 pips
 - Trailing Stop Loss: 5 pips
 
