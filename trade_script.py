@@ -36,6 +36,47 @@ model = joblib.load('randomforest_best_model_with_scaler.joblib')
 print("Model loaded successfully")
 
 
+# Mine is stored in s3 due to size limitaions in github
+
+# def download_model_from_s3():
+#     """Download model file from S3 bucket"""
+#     try:
+#         # Initialize S3 client
+#         s3_client = boto3.client(
+#             's3',
+#             aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+#             aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
+#             region_name=os.environ.get('AWS_REGION', 'us-east-1')  # Change region as needed
+#         )
+
+#         # Download model file
+#         bucket_name = os.environ.get('S3_BUCKET_NAME')
+#         model_key = os.environ.get('MODEL_KEY', 'randomforest_best_model_with_scaler.joblib')
+#         local_model_path = 'model.joblib'
+
+#         print(f"Downloading model from s3://{bucket_name}/{model_key}")
+#         s3_client.download_file(bucket_name, model_key, local_model_path)
+#         print("Model downloaded successfully")
+
+#         # Load the model
+#         model = joblib.load(local_model_path)
+#         print("Model loaded successfully")
+
+#         return model
+
+#     except Exception as e:
+#         print(f"Error downloading/loading model: {str(e)}")
+#         raise
+
+
+# try:
+#     model = download_model_from_s3()
+#     print("Model initialization complete")
+# except Exception as e:
+#     print(f"Failed to initialize model: {str(e)}")
+#     raise
+
+
 # Add at the top level of your script with other initializations
 signal_queue = deque(maxlen=3)
 probability_queue = deque(maxlen=3)
@@ -101,10 +142,9 @@ def add_technical_indicators(df):
 
 
 async def process_data():
-    global data_buffer
+    global data_buffer, signal_queue, probability_queue  # Make sure to reference global queues
     params = {"instruments": "EUR_USD"}
 
-    # Define feature columns in the same order as during training
     feature_columns = [
         'EMA_9', 'EMA_21', 'RSI_5', 'MACD', 'MACD_signal', 'MACD_diff',
         'BB_high', 'BB_low', 'BB_mid', 'Stoch_k', 'Stoch_d',
@@ -116,41 +156,51 @@ async def process_data():
 
     while True:
         try:
-            if len(data_buffer) >= 30:  # Minimum data needed for indicators
-                # Prepare data for prediction
+            if len(data_buffer) >= 30:
                 data = data_buffer.copy()
                 data = add_technical_indicators(data)
 
                 if len(data) > 0:
-                    # Prepare features with correct column names
                     X = prepare_features(data)
-
-                    # Ensure we're using only the last row and preserving feature names
                     X_last = pd.DataFrame(X.iloc[-1:].values, columns=feature_columns)
 
-                    # Get prediction
+                    # Get prediction and probabilities
                     prediction = model.predict(X_last)[0]
                     probabilities = model.predict_proba(X_last)[0]
 
+                    # Add to queues
+                    signal_queue.append(prediction)
+                    probability_queue.append(probabilities)
+
                     print(f"Prediction: {prediction} (Down: {probabilities[0]:.3f}, "
                           f"Neutral: {probabilities[1]:.3f}, Up: {probabilities[2]:.3f})")
+                    print(f"Current signal queue: {list(signal_queue)}")  # Add this to debug
 
-                    # Trading logic
                     if not has_open_trade(params["instruments"]):
-                        # Strong signals only
-                        if prediction == 2 and probabilities[2] > 0.75:  # Up with high confidence
-                            await execute_trade(True, False)
-                        elif prediction == 0 and probabilities[0] > 0.75:  # Down with high confidence
-                            await execute_trade(False, True)
+                        if len(signal_queue) == 3:  # Queue is full
+                            avg_up_prob = sum(p[2] for p in probability_queue) / 3
+                            avg_down_prob = sum(p[0] for p in probability_queue) / 3
+
+                            if all(signal == 2 for signal in signal_queue) and avg_up_prob > 0.75:
+                                print("Strong uptrend confirmed! Average up probability:", avg_up_prob)
+                                await execute_trade(True, False)
+                            elif all(signal == 0 for signal in signal_queue) and avg_down_prob > 0.75:
+                                print("Strong downtrend confirmed! Average down probability:", avg_down_prob)
+                                await execute_trade(False, True)
+                            else:
+                                print("No consistent trend detected in queue")
                         else:
-                            print("No strong signals detected")
+                            print(f"Building signal queue: {len(signal_queue)}/3")
                     else:
                         print("Trade already open, skipping signal")
 
         except Exception as e:
             print(f"Error in process_data: {str(e)}")
+            # Clear queues on error to prevent stale data
+            signal_queue.clear()
+            probability_queue.clear()
 
-        await asyncio.sleep(5)  # Adjust the sleep time as needed
+        await asyncio.sleep(5)
 
 
 def prepare_features(df):
@@ -164,8 +214,6 @@ def prepare_features(df):
         'RSI_Trend', 'Price_Above_BB_Mid', 'Stoch_Crossover'
     ]
     return df[feature_columns]
-
-
 
 
 async def stream_pricing():
