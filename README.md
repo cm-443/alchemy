@@ -2,10 +2,11 @@
 
 ### Instructions
 1. Open Oanda account and get api keys (Spread is built in, no fees, $10 is enough to run tests)
-2. Add api keys to places (See notes in data and trade script)
-3. Run the get_data.py script to get training data
-4. Train the model with the collected data
-5. Run the trade script
+2. Install Pycharm, clone repo, install packages (click on the import statements at the top and select install) 
+3. Add api keys to places (See notes in data and trade script)
+4. Run the get_data.py script to get training data
+5. Train the model with the collected data
+6. Run the trade script
 
 
 ### OANDA Forex Data Collector
